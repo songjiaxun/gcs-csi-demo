@@ -1,0 +1,3 @@
+imutils
+opencv-python
+google-cloud-storage

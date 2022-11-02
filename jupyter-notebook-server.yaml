@@ -1,0 +1,77 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  namespace: gcs-csi-example
+  name: local-pd
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: standard-rwo
+  resources:
+    requests:
+      storage: 100Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: gcs-csi-example
+  name: jupyter-notebook-server
+spec:
+  selector:
+    app: jupyter-notebook-server
+  ports:
+  - name: name-of-service-port
+    protocol: TCP
+    port: 8888
+    targetPort: http-web-svc
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: gcs-csi-example
+  name: jupyter-notebook-server
+  labels:
+    app: jupyter-notebook-server
+  annotations:
+    gke-gcsfuse/volumes: "true"
+    gke-gcsfuse/cpu-limit: "2"
+    gke-gcsfuse/memory-limit: 2Gi
+    gke-gcsfuse/local-storage-limit: 50Gi
+spec:
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 100
+    fsGroup: 100
+  containers:
+  - name: jupyter-notebook-server
+    image: jupyter/tensorflow-notebook:latest
+    # password: testtest
+    args: ["start-notebook.sh", "--NotebookApp.password='argon2:$argon2id$v=19$m=10240,t=10,p=8$1zOa5vwUaYQlPAcOCwQD9w$x2KByFJzFDdrt32pQ1Hvv/gImq5yqO2D136bJbuIfN8'"]
+    resources:
+      limits:
+        cpu: 2
+        memory: 10Gi
+      requests:
+        cpu: 2
+        memory: 10Gi
+    ports:
+    - containerPort: 8888
+      name: http-web-svc
+    volumeMounts:
+    - name: gcp-cloud-storage-csi-ephemeral-non-root
+      mountPath: /home/jovyan/gcs_bucket # jovyan is the default user
+    - name: local-pd-pvc
+      mountPath: /home/jovyan/local_disk # jovyan is the default user
+  serviceAccountName: gcs-csi
+  volumes:
+  - name: local-pd-pvc
+    persistentVolumeClaim:
+      claimName: local-pd
+      readOnly: false
+  - name: gcp-cloud-storage-csi-ephemeral-non-root
+    csi:
+      driver: gcsfuse.csi.storage.gke.io
+      volumeAttributes:
+        bucketName: gke-gcs-fuse-csi-demo # unique bucket name
+        mountOptions: "allow_other,uid=1000,gid=100" # the image uses uid 1000 and gid 100 by default
