@@ -74,4 +74,4 @@ spec:
       driver: gcsfuse.csi.storage.gke.io
       volumeAttributes:
         bucketName: gke-gcs-fuse-csi-demo # unique bucket name
-        mountOptions: "allow_other,uid=1000,gid=100" # the image uses uid 1000 and gid 100 by default
+        mountOptions: "uid=1000,gid=100" # the image uses uid 1000 and gid 100 by default
