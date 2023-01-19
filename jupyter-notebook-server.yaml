@@ -50,10 +50,10 @@ spec:
     args: ["start-notebook.sh", "--NotebookApp.password='argon2:$argon2id$v=19$m=10240,t=10,p=8$1zOa5vwUaYQlPAcOCwQD9w$x2KByFJzFDdrt32pQ1Hvv/gImq5yqO2D136bJbuIfN8'"]
     resources:
       limits:
-        cpu: 2
+        cpu: "2"
         memory: 10Gi
       requests:
-        cpu: 2
+        cpu: "2"
         memory: 10Gi
     ports:
     - containerPort: 8888
